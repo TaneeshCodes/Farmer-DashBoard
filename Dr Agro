@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard</title>
+    <style>
+        /* 1. CSS Reset & Variables */
+        :root {
+            --primary-color: #10B981;
+            --primary-dark: #059669;
+            --healthy-color: #22C55E;
+            --warning-color: #F59E0B;
+            --issue-color: #EF4444;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --border-radius: 0.75rem;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* 2. General & Utility Styles */
+        .hidden { display: none !important; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-secondary { background-color: #e5e7eb; color: var(--text-primary); }
+        .btn-secondary:hover { background-color: #d1d5db; }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-good { background-color: #dcfce7; color: #166534; }
+        .badge-moderate { background-color: #fef3c7; color: #92400e; }
+        .badge-poor { background-color: #fee2e2; color: #991b1b; }
+
+        .icon {
+            width: 1.25em;
+            height: 1.25em;
+            stroke-width: 2;
+            fill: none;
+            stroke: currentColor;
+        }
+
+        /* 3. Login Screen */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            background-color: var(--surface-color);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-card h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+        }
+        .login-form .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .login-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .login-form input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .login-form input:focus {
+            outline: 2px solid var(--primary-color);
+            border-color: transparent;
+        }
+        .login-form button {
+            width: 100%;
+            font-size: 1.1rem;
+        }
+        
+        /* 4. Dashboard Layout */
+        .dashboard-screen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+        }
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-decoration: none;
+            margin-right: 2rem;
+        }
+        .navbar .search-bar {
+            position: relative;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+        .navbar .search-bar input {
+            width: 100%;
+            padding: 0.6rem 0.6rem 0.6rem 2.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+        }
+        .navbar .search-bar .icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .navbar .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-left: auto;
+        }
+        .location-selector, .profile-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .location-selector span, .profile-menu span {
+            font-weight: 500;
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .content-area {
+            flex-grow: 1;
+        }
+        
+        .sidebar {
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        footer {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--surface-color);
+        }
+        footer a { color: var(--primary-color); text-decoration: none; }
+
+        /* 5. Dashboard Components */
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background-color: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        .stat-card h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* Farm Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .plot-tile {
+            position: relative;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.25rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 5px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .plot-tile.status-good { border-left-color: var(--healthy-color); }
+        .plot-tile.status-moderate { border-left-color: var(--warning-color); }
+        .plot-tile.status-poor { border-left-color: var(--issue-color); }
+        
+        .plot-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .plot-tile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .plot-tile h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-left: 1rem;
+        }
+        .status-dot.good { background-color: var(--healthy-color); }
+        .status-dot.moderate { background-color: var(--warning-color); }
+        .status-dot.poor { background-color: var(--issue-color); }
+        
+        .plot-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .moisture-info { font-size: 1.5rem; font-weight: 600; }
+        .moisture-info span { font-size: 1rem; font-weight: 400; color: var(--text-secondary); }
+
+        .quick-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            background-color: rgba(249, 250, 251, 0.9);
+            padding: 0.75rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+        .plot-tile:hover .quick-actions { transform: translateY(0); }
+        .quick-actions button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .quick-actions button:hover { background-color: var(--border-color); }
+
+        /* Spraying Animation */
+        @keyframes spray-glow {
+            0% { box-shadow: 0 0 5px 0px rgba(16, 185, 129, 0.7); }
+            50% { box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.7); }
+            100% { box-shadow: 0 0 5px 0px rgba(16, 185, 129, 0.7); }
+        }
+        .plot-tile.spraying {
+            animation: spray-glow 2s infinite ease-in-out;
+        }
+        
+        /* Tasks Sidebar */
+        .tasks-card {
+            background-color: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            height: 100%;
+        }
+        .tasks-card h2 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .task-list {
+            list-style: none;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-info { flex-grow: 1; }
+        .task-info .time { font-size: 0.9rem; color: var(--text-secondary); }
+        .task-item.completed .task-info {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+        .task-item button {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        /* 6. Modal */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-container.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-container.visible .modal-content {
+            transform: scale(1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h2 { font-size: 1.75rem; }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .modal-close-btn:hover { color: var(--text-primary); }
+        
+        .modal-body .detail-group { margin-bottom: 1.5rem; }
+        .modal-body h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary-dark);
+        }
+        #moisture-chart {
+            width: 100%;
+            height: 150px;
+            background-color: var(--bg-color);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+        .notes-list {
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .notes-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .notes-list li:last-child { border-bottom: none; }
+        .add-note-form { display: flex; gap: 0.5rem; }
+        .add-note-form input {
+            flex-grow: 1;
+            padding: 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+        
+        .modal-footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* 7. Responsive Design */
+        @media (max-width: 1024px) {
+            main { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .grid-container { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .nav-actions { display: none; /* Simplification: hide on mobile */ }
+            .navbar .search-bar { max-width: 250px; }
+            .stats-container { grid-template-columns: repeat(2, 1fr); }
+            .grid-container { grid-template-columns: repeat(1, 1fr); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <section id="login-screen" class="login-screen">
+        <div class="login-card">
+            <h1><span id="login-logo-icon"></span> Farmer Dashboard</h1>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="e.g., john_farmer" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="dashboard-screen" class="dashboard-screen hidden">
+        <header class="navbar">
+            <a href="#" class="logo">
+                <span id="dash-logo-icon"></span>
+                <span>FarmDash</span>
+            </a>
+            <div class="search-bar">
+                <span id="search-icon"></span>
+                <input type="text" id="search-input" placeholder="Search plots by crop name...">
+            </div>
+            <div class="nav-actions">
+                <div class="location-selector">
+                    <span id="map-pin-icon"></span>
+                    <span id="location-name">Central Valley</span>
+                </div>
+                <div class="profile-menu">
+                    <span id="user-icon"></span>
+                    <span>Demo Farmer</span>
+                </div>
+                <button id="reset-data-btn" class="btn btn-secondary" title="Reset all data to default">Reset Data</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="content-area">
+                <section class="stats-container" id="stats-container">
+                    </section>
+                <section class="grid-container" id="farm-grid">
+                    </section>
+            </div>
+            <aside class="sidebar">
+                <div class="tasks-card">
+                    <h2><span id="calendar-icon"></span> Today's Tasks</h2>
+                    <ul class="task-list" id="task-list">
+                        </ul>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Farmer Dashboard v1.0 | <a href="#">Support</a> | <a href="#">Docs</a></p>
+        </footer>
+    </section>
+
+    <div id="modal-container" class="modal-container">
+        <div id="modal-content" class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Plot Details</h2>
+                <button id="modal-close-btn" class="modal-close-btn" title="Close"><span id="close-icon"></span></button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-group">
+                    <h3>Plot Information</h3>
+                    <p><strong>Plot ID:</strong> <span id="modal-plot-id"></span></p>
+                    <p><strong>Health:</strong> <span id="modal-health-status"></span></p>
+                    <p><strong>Last Scan:</strong> <span id="modal-last-scan"></span></p>
+                </div>
+                <div class="detail-group">
+                    <h3>Moisture History (last 10 scans)</h3>
+                    <canvas id="moisture-chart"></canvas>
+                </div>
+                <div class="detail-group">
+                    <h3>Notes</h3>
+                    <ul id="notes-list" class="notes-list"><li>No notes yet.</li></ul>
+                    <form id="add-note-form" class="add-note-form">
+                        <input type="text" id="note-input" placeholder="Add a new note..." required>
+                        <button type="submit" class="btn btn-secondary">Add</button>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // ===================================
+    //  1. STATE & INITIAL DATA
+    // ===================================
+    const ICONS = {
+        leaf: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22s1-3 9-3 9 3 9 3M12 19V2m0 17c-4 0-7-2-7-5s3-5 7-5 7 2 7 5-3 5-7 5z"></path></svg>`,
+        search: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+        mapPin: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+        user: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+        calendar: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+        close: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+        play: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
+        stop: `<svg class="icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12"></rect></svg>`,
+    };
+
+    const HEALTH_MAP = {
+        Good: { badge: 'badge-good', status: 'good', color: 'var(--healthy-color)' },
+        Moderate: { badge: 'badge-moderate', status: 'moderate', color: 'var(--warning-color)' },
+        Poor: { badge: 'badge-poor', status: 'poor', color: 'var(--issue-color)' },
+    };
+    
+    const seedData = {
+        plots: [
+            { id: 1, name: 'Wheat', moisture: 62, health: 'Good', spraying: false },
+            { id: 2, name: 'Rice', moisture: 48, health: 'Moderate', spraying: true },
+            { id: 3, name: 'Corn', moisture: 75, health: 'Good', spraying: false },
+            { id: 4, name: 'Soybean', moisture: 35, health: 'Poor', spraying: false },
+            { id: 5, name: 'Barley', moisture: 55, health: 'Moderate', spraying: false },
+            { id: 6, name: 'Potato', moisture: 81, health: 'Good', spraying: false },
+            { id: 7, name: 'Tomato', moisture: 68, health: 'Good', spraying: true },
+            { id: 8, name: 'Carrot', moisture: 42, health: 'Moderate', spraying: false },
+            { id: 9, name: 'Sugarcane', moisture: 88, health: 'Good', spraying: false },
+        ],
+        tasks: [
+            { id: 1, time: '08:00', plotId: 2, action: 'Check irrigation pump' },
+            { id: 2, time: '10:30', plotId: 4, action: 'Apply fertilizer' },
+            { id: 3, time: '14:00', plotId: 7, action: 'Pest scouting' },
+        ]
+    };
+    
+    let appState = { plots: [], tasks: [] };
+
+    // ===================================
+    //  2. DOM ELEMENT SELECTORS
+    // ===================================
+    const loginScreen = document.getElementById('login-screen');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    const loginForm = document.getElementById('login-form');
+    const farmGrid = document.getElementById('farm-grid');
+    const statsContainer = document.getElementById('stats-container');
+    const taskList = document.getElementById('task-list');
+    const searchInput = document.getElementById('search-input');
+    const modalContainer = document.getElementById('modal-container');
+    const modalContent = document.getElementById('modal-content');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    // ===================================
+    //  3. RENDER FUNCTIONS
+    // ===================================
+    function renderIcons() {
+        document.getElementById('login-logo-icon').innerHTML = ICONS.leaf;
+        document.getElementById('dash-logo-icon').innerHTML = ICONS.leaf;
+        document.getElementById('search-icon').innerHTML = ICONS.search;
+        document.getElementById('map-pin-icon').innerHTML = ICONS.mapPin;
+        document.getElementById('user-icon').innerHTML = ICONS.user;
+        document.getElementById('calendar-icon').innerHTML = ICONS.calendar;
+        document.getElementById('close-icon').innerHTML = ICONS.close;
+    }
+
+    function renderStats() {
+        const totalPlots = appState.plots.length;
+        const healthyPlots = appState.plots.filter(p => p.health === 'Good').length;
+        const activeSprays = appState.plots.filter(p => p.spraying).length;
+        const avgMoisture = appState.plots.reduce((sum, p) => sum + p.moisture, 0) / totalPlots;
+
+        statsContainer.innerHTML = `
+            <div class="stat-card"><h3>Avg Moisture</h3><p class="value">${avgMoisture.toFixed(1)}%</p></div>
+            <div class="stat-card"><h3>Active Sprays</h3><p class="value">${activeSprays}</p></div>
+            <div class="stat-card"><h3>Healthy Plots</h3><p class="value">${healthyPlots} / ${totalPlots}</p></div>
+            <div class="stat-card"><h3>Total Plots</h3><p class="value">${totalPlots}</p></div>
+        `;
+    }
+
+    function renderGrid(plotsToRender = appState.plots) {
+        farmGrid.innerHTML = '';
+        if (plotsToRender.length === 0) {
+            farmGrid.innerHTML = '<p>No plots match your search.</p>';
+            return;
+        }
+        plotsToRender.forEach(plot => {
+            const healthInfo = HEALTH_MAP[plot.health];
+            const tile = document.createElement('div');
+            tile.className = `plot-tile status-${healthInfo.status} ${plot.spraying ? 'spraying' : ''}`;
+            tile.dataset.plotId = plot.id;
+            tile.innerHTML = `
+                <div class="plot-tile-header">
+                    <div>
+                        <h2>${plot.name}</h2>
+                        <span class="badge ${healthInfo.badge}">${plot.health}</span>
+                    </div>
+                    <div class="status-dot ${healthInfo.status}"></div>
+                </div>
+                <div class="plot-info">
+                    <div class="moisture-info">${plot.moisture}% <span>Moisture</span></div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-view" data-action="view">View</button>
+                    <button class="action-spray" data-action="spray">${plot.spraying ? 'Stop' : 'Start'} Spray</button>
+                </div>
+            `;
+            farmGrid.appendChild(tile);
+        });
+    }
+
+    function renderTasks() {
+        taskList.innerHTML = '';
+        appState.tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = `task-item ${task.completed ? 'completed' : ''}`;
+            li.dataset.taskId = task.id;
+            li.innerHTML = `
+                <div class="task-info">
+                    <p><strong>Plot ${task.plotId}:</strong> ${task.action}</p>
+                    <p class="time">${task.time}</p>
+                </div>
+                <button class="btn btn-secondary action-complete">${task.completed ? 'Undo' : 'Complete'}</button>
+            `;
+            taskList.appendChild(li);
+        });
+    }
+    
+    function renderAll() {
+        renderStats();
+        handleSearch(); // Re-applies search filter on re-render
+        renderTasks();
+    }
+
+    // ===================================
+    //  4. EVENT HANDLERS & INTERACTIONS
+    // ===================================
+
+    function handleLogin(e) {
+        e.preventDefault();
+        loginScreen.classList.add('hidden');
+        dashboardScreen.classList.remove('hidden');
+    }
+    
+    function handleSearch() {
+        const query = searchInput.value.toLowerCase();
+        const filteredPlots = appState.plots.filter(p => p.name.toLowerCase().includes(query));
+        renderGrid(filteredPlots);
+    }
+    
+    function handleGridClick(e) {
+        const tile = e.target.closest('.plot-tile');
+        if (!tile) return;
+        const plotId = parseInt(tile.dataset.plotId);
+        
+        if (e.target.dataset.action === 'spray') {
+            toggleSpray(plotId);
+        } else { // Default action is view
+            openModal(plotId);
+        }
+    }
+    
+    function handleTaskClick(e) {
+        const button = e.target.closest('.action-complete');
+        if (!button) return;
+        
+        const taskItem = e.target.closest('.task-item');
+        const taskId = parseInt(taskItem.dataset.taskId);
+        const task = appState.tasks.find(t => t.id === taskId);
+        
+        if (task) {
+            task.completed = !task.completed;
+            saveState();
+            renderTasks();
+        }
+    }
+    
+    function toggleSpray(plotId) {
+        const plot = appState.plots.find(p => p.id === plotId);
+        if (plot) {
+            plot.spraying = !plot.spraying;
+            saveState();
+            renderAll(); // Use renderAll to ensure stats card updates
+        }
+    }
+
+    // ===================================
+    //  5. MODAL LOGIC
+    // ===================================
+    let currentModalPlotId = null;
+
+    function openModal(plotId) {
+        currentModalPlotId = plotId;
+        const plot = appState.plots.find(p => p.id === plotId);
+        if (!plot) return;
+
+        document.getElementById('modal-title').textContent = `${plot.name} - Plot #${plot.id}`;
+        document.getElementById('modal-plot-id').textContent = plot.id;
+        document.getElementById('modal-health-status').innerHTML = `<span class="badge ${HEALTH_MAP[plot.health].badge}">${plot.health}</span>`;
+        document.getElementById('modal-last-scan').textContent = new Date().toLocaleTimeString();
+        
+        // Render notes
+        const notesList = document.getElementById('notes-list');
+        notesList.innerHTML = '';
+        if (plot.notes && plot.notes.length > 0) {
+            plot.notes.forEach(note => {
+                notesList.innerHTML += `<li>${note}</li>`;
+            });
+        } else {
+            notesList.innerHTML = '<li>No notes yet.</li>';
+        }
+        
+        // Render footer buttons
+        document.getElementById('modal-footer').innerHTML = `
+            <button id="modal-spray-btn" class="btn btn-secondary">${plot.spraying ? ICONS.stop + 'Stop' : ICONS.play + 'Start'} Spray</button>
+            <button id="modal-healthy-btn" class="btn btn-secondary">Mark as Healthy</button>
+        `;
+        document.getElementById('modal-spray-btn').onclick = () => { toggleSpray(plotId); openModal(plotId); };
+        document.getElementById('modal-healthy-btn').onclick = () => { markAsHealthy(plotId); openModal(plotId); };
+
+        drawMoistureChart(plot);
+        modalContainer.classList.add('visible');
+    }
+
+    function closeModal() {
+        modalContainer.classList.remove('visible');
+        currentModalPlotId = null;
+    }
+
+    function handleNoteSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('note-input');
+        const noteText = input.value.trim();
+        if (noteText && currentModalPlotId) {
+            const plot = appState.plots.find(p => p.id === currentModalPlotId);
+            if (!plot.notes) plot.notes = [];
+            plot.notes.push(noteText);
+            input.value = '';
+            saveState();
+            openModal(currentModalPlotId); // Refresh modal view
+        }
+    }
+
+    function markAsHealthy(plotId) {
+        const plot = appState.plots.find(p => p.id === plotId);
+        if (plot) {
+            plot.health = 'Good';
+            saveState();
+            renderAll();
+        }
+    }
+
+    // ===================================
+    //  6. CANVAS CHART
+    // ===================================
+    function drawMoistureChart(plot) {
+        const canvas = document.getElementById('moisture-chart');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        const padding = 20;
+
+        // Create some fake historical data
+        const data = Array.from({length: 10}, (_, i) => {
+            const fluctuation = (Math.random() - 0.5) * 15;
+            const value = plot.moisture + fluctuation - (10 - i) * 0.5;
+            return Math.max(0, Math.min(100, value));
+        });
+
+        ctx.clearRect(0, 0, w, h);
+        
+        // --- Draw Grid Lines & Labels ---
+        ctx.beginPath();
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.font = '10px var(--font-family)';
+        ctx.fillStyle = '#9ca3af';
+        ['100%', '50%', '0%'].forEach((label, i) => {
+            const y = padding + i * (h - 2 * padding) / 2;
+            ctx.moveTo(padding, y);
+            ctx.lineTo(w - padding, y);
+            ctx.fillText(label, 5, y + 3);
+        });
+        ctx.stroke();
+
+        // --- Draw the Area Chart ---
+        const sliceWidth = (w - 2 * padding) / (data.length - 1);
+        ctx.beginPath();
+        ctx.moveTo(padding, h - padding);
+        data.forEach((value, i) => {
+            const x = padding + i * sliceWidth;
+            const y = (h - padding) - (value / 100) * (h - 2 * padding);
+            ctx.lineTo(x, y);
+        });
+        ctx.lineTo(w - padding, h - padding);
+        ctx.closePath();
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // --- Draw the Line on Top ---
+        ctx.beginPath();
+        ctx.strokeStyle = 'var(--primary-color)';
+        ctx.lineWidth = 2.5;
+        data.forEach((value, i) => {
+            const x = padding + i * sliceWidth;
+            const y = (h - padding) - (value / 100) * (h - 2 * padding);
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.stroke();
+    }
+
+
+    // ===================================
+    //  7. LIVE UPDATES & PERSISTENCE
+    // ===================================
+    function simulateDataChanges() {
+        appState.plots.forEach(plot => {
+            const change = Math.floor(Math.random() * 7) - 3; // -3 to +3
+            plot.moisture = Math.max(0, Math.min(100, plot.moisture + change));
+            
+            if (Math.random() < 0.05) { // 5% chance to change health
+                if (plot.moisture < 40) plot.health = 'Poor';
+                else if (plot.moisture < 55) plot.health = 'Moderate';
+                else plot.health = 'Good';
+            }
+        });
+        renderAll();
+    }
+    
+    function saveState() {
+        const stateToSave = {
+            plots: appState.plots.map(p => ({
+                id: p.id,
+                spraying: p.spraying,
+                notes: p.notes || [],
+            })),
+            tasks: appState.tasks.map(t => ({
+                id: t.id,
+                completed: t.completed
+            }))
+        };
+        localStorage.setItem('farmerDashboardState', JSON.stringify(stateToSave));
+    }
+    
+    function loadState() {
+        const savedState = JSON.parse(localStorage.getItem('farmerDashboardState'));
+        
+        appState.plots = JSON.parse(JSON.stringify(seedData.plots));
+        appState.tasks = JSON.parse(JSON.stringify(seedData.tasks));
+        
+        if (savedState) {
+            appState.plots.forEach(plot => {
+                const savedPlot = savedState.plots.find(p => p.id === plot.id);
+                if (savedPlot) {
+                    plot.spraying = savedPlot.spraying;
+                    plot.notes = savedPlot.notes;
+                }
+            });
+            appState.tasks.forEach(task => {
+                const savedTask = savedState.tasks.find(t => t.id === task.id);
+                if (savedTask) {
+                    task.completed = savedTask.completed;
+                }
+            });
+        }
+    }
+
+    function resetData() {
+        if(confirm('Are you sure you want to reset all data? This will clear spray status, notes, and completed tasks.')) {
+            localStorage.removeItem('farmerDashboardState');
+            init();
+        }
+    }
+
+    // ===================================
+    //  8. INITIALIZATION
+    // ===================================
+    function init() {
+        renderIcons();
+        loadState();
+        renderAll();
+        
+        // Event Listeners
+        loginForm.addEventListener('submit', handleLogin);
+        searchInput.addEventListener('input', handleSearch);
+        farmGrid.addEventListener('click', handleGridClick);
+        taskList.addEventListener('click', handleTaskClick);
+        
+        // Modal Listeners
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalContainer.classList.contains('visible')) {
+                closeModal();
+            }
+        });
+        document.getElementById('add-note-form').addEventListener('submit', handleNoteSubmit);
+        document.getElementById('reset-data-btn').addEventListener('click', resetData);
+
+        // Start live updates
+        setInterval(simulateDataChanges, 10000);
+    }
+    
+    init();
+
+});
+</script>
+</body>
+</html>
